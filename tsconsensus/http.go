@@ -113,11 +113,7 @@ func (h authedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (c *Consensus) makeCommandMux() *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/join", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != httpm.POST {
-			http.Error(w, "Method must be POST", http.StatusMethodNotAllowed)
-			return
-		}
+	mux.HandleFunc("POST /join", func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 		decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1024*1024))
 		var jr joinRequest
@@ -146,11 +142,7 @@ func (c *Consensus) makeCommandMux() *http.ServeMux {
 			return
 		}
 	})
-	mux.HandleFunc("/executeCommand", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != httpm.POST {
-			http.Error(w, "Bad Request", http.StatusBadRequest)
-			return
-		}
+	mux.HandleFunc("POST /executeCommand", func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 		decoder := json.NewDecoder(r.Body)
 		var cmd Command

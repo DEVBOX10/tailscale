@@ -47,10 +47,10 @@ func serveMonitor(c *Consensus, ts *tsnet.Server, listenAddr string) (*http.Serv
 	}
 	m := &monitor{con: c, ts: ts}
 	mux := http.NewServeMux()
-	mux.HandleFunc("/full", m.handleFullStatus)
-	mux.HandleFunc("/", m.handleSummaryStatus)
-	mux.HandleFunc("/netmap", m.handleNetmap)
-	mux.HandleFunc("/dial", m.handleDial)
+	mux.HandleFunc("GET /full", m.handleFullStatus)
+	mux.HandleFunc("GET /{$}", m.handleSummaryStatus)
+	mux.HandleFunc("GET /netmap", m.handleNetmap)
+	mux.HandleFunc("POST /dial", m.handleDial)
 	srv := &http.Server{Handler: mux}
 	go func() {
 		err := srv.Serve(ln)
