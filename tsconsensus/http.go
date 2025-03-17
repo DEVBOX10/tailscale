@@ -111,56 +111,60 @@ func (h authedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.handler.ServeHTTP(w, r)
 }
 
+func (c *Consensus) handleJoinHTTP(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1024*1024))
+	var jr joinRequest
+	err := decoder.Decode(&jr)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	_, err = decoder.Token()
+	if !errors.Is(err, io.EOF) {
+		http.Error(w, "Request body must only contain a single JSON object", http.StatusBadRequest)
+		return
+	}
+	if jr.RemoteHost == "" {
+		http.Error(w, "Required: remoteAddr", http.StatusBadRequest)
+		return
+	}
+	if jr.RemoteID == "" {
+		http.Error(w, "Required: remoteID", http.StatusBadRequest)
+		return
+	}
+	err = c.handleJoin(jr)
+	if err != nil {
+		log.Printf("join handler error: %v", err)
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+}
+
+func (c *Consensus) handleExecuteCommandHTTP(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	decoder := json.NewDecoder(r.Body)
+	var cmd Command
+	err := decoder.Decode(&cmd)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	result, err := c.executeCommandLocally(cmd)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if err := json.NewEncoder(w).Encode(result); err != nil {
+		log.Printf("error encoding execute command result: %v", err)
+		return
+	}
+}
+
 func (c *Consensus) makeCommandMux() *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("POST /join", func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
-		decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1024*1024))
-		var jr joinRequest
-		err := decoder.Decode(&jr)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		_, err = decoder.Token()
-		if !errors.Is(err, io.EOF) {
-			http.Error(w, "Request body must only contain a single JSON object", http.StatusBadRequest)
-			return
-		}
-		if jr.RemoteHost == "" {
-			http.Error(w, "Required: remoteAddr", http.StatusBadRequest)
-			return
-		}
-		if jr.RemoteID == "" {
-			http.Error(w, "Required: remoteID", http.StatusBadRequest)
-			return
-		}
-		err = c.handleJoin(jr)
-		if err != nil {
-			log.Printf("join handler error: %v", err)
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-	})
-	mux.HandleFunc("POST /executeCommand", func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
-		decoder := json.NewDecoder(r.Body)
-		var cmd Command
-		err := decoder.Decode(&cmd)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		result, err := c.executeCommandLocally(cmd)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		if err := json.NewEncoder(w).Encode(result); err != nil {
-			log.Printf("error encoding execute command result: %v", err)
-			return
-		}
-	})
+	mux.HandleFunc("POST /join", c.handleJoinHTTP)
+	mux.HandleFunc("POST /executeCommand", c.handleExecuteCommandHTTP)
 	return mux
 }
 
