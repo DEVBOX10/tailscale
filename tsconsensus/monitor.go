@@ -11,7 +11,6 @@ import (
 	"log"
 	"net/http"
 	"slices"
-	"strings"
 
 	"tailscale.com/ipn"
 	"tailscale.com/ipn/ipnstate"
@@ -87,15 +86,20 @@ func (m *monitor) handleSummaryStatus(w http.ResponseWriter, r *http.Request) {
 			lines = append(lines, fmt.Sprintf("%s\t\t%d\t%d\t%t", name, p.RxBytes, p.TxBytes, p.Active))
 		}
 	}
-	slices.Sort(lines)
-	peerTxt := strings.Join(lines, "\n") + "\n"
-
 	_, err = w.Write([]byte(fmt.Sprintf("RaftState: %s\n", s.RaftState)))
 	if err != nil {
 		log.Printf("monitor: error writing status: %v", err)
 		return
 	}
-	w.Write([]byte(peerTxt))
+
+	slices.Sort(lines)
+	for _, l := range lines {
+		_, err = w.Write([]byte(fmt.Sprintf("%s\n", l)))
+		if err != nil {
+			log.Printf("monitor: error writing status: %v", err)
+			return
+		}
+	}
 }
 
 func (m *monitor) handleNetmap(w http.ResponseWriter, r *http.Request) {
