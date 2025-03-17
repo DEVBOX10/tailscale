@@ -284,20 +284,19 @@ func (c *Consensus) bootstrap(targets views.Slice[*ipnstate.PeerStatus]) error {
 	for _, p := range targets.All() {
 		if !p.Online {
 			log.Printf("Trying to find cluster: tailscale reports not online: %s", p.TailscaleIPs[0])
-		} else {
-			log.Printf("Trying to find cluster: trying %s", p.TailscaleIPs[0])
-			err := c.commandClient.join(p.TailscaleIPs[0].String(), joinRequest{
-				RemoteHost: c.self.hostAddr.String(),
-				RemoteID:   c.self.id,
-			})
-			if err != nil {
-				log.Printf("Trying to find cluster: could not join %s: %v", p.TailscaleIPs[0], err)
-				continue
-			} else {
-				log.Printf("Trying to find cluster: joined %s", p.TailscaleIPs[0])
-				return nil
-			}
+			continue
 		}
+		log.Printf("Trying to find cluster: trying %s", p.TailscaleIPs[0])
+		err := c.commandClient.join(p.TailscaleIPs[0].String(), joinRequest{
+			RemoteHost: c.self.hostAddr.String(),
+			RemoteID:   c.self.id,
+		})
+		if err != nil {
+			log.Printf("Trying to find cluster: could not join %s: %v", p.TailscaleIPs[0], err)
+			continue
+		}
+		log.Printf("Trying to find cluster: joined %s", p.TailscaleIPs[0])
+		return nil
 	}
 
 	log.Printf("Trying to find cluster: unsuccessful, starting as leader: %s", c.self.hostAddr.String())
