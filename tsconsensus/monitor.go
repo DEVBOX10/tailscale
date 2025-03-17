@@ -138,7 +138,7 @@ func (m *monitor) handleDial(w http.ResponseWriter, r *http.Request) {
 		Addr string
 	}
 	defer r.Body.Close()
-	bs, err := io.ReadAll(r.Body)
+	bs, err := io.ReadAll(http.MaxBytesReader(w, r.Body, maxBodyBytes))
 	if err != nil {
 		log.Printf("monitor: error reading body: %v", err)
 		http.Error(w, "", http.StatusInternalServerError)
