@@ -86,8 +86,8 @@ func (rac *commandClient) executeCommand(host string, bs []byte) (CommandResult,
 }
 
 type authedHandler struct {
-	auth *authorization
-	mux  *http.ServeMux
+	auth    *authorization
+	handler http.Handler
 }
 
 func (h authedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -108,7 +108,7 @@ func (h authedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "peer not allowed", http.StatusForbidden)
 		return
 	}
-	h.mux.ServeHTTP(w, r)
+	h.handler.ServeHTTP(w, r)
 }
 
 func (c *Consensus) makeCommandMux() *http.ServeMux {
@@ -166,7 +166,7 @@ func (c *Consensus) makeCommandMux() *http.ServeMux {
 
 func (c *Consensus) makeCommandHandler(auth *authorization) http.Handler {
 	return authedHandler{
-		mux:  c.makeCommandMux(),
-		auth: auth,
+		handler: c.makeCommandMux(),
+		auth:    auth,
 	}
 }
