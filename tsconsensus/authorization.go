@@ -106,7 +106,7 @@ func (a *authorization) SelfAllowed() bool {
 
 func (a *authorization) AllowedPeers() views.Slice[*ipnstate.PeerStatus] {
 	if a.peers == nil {
-		return views.SliceOf([]*ipnstate.PeerStatus{})
+		return views.Slice[*ipnstate.PeerStatus]{}
 	}
 	a.mu.Lock()
 	defer a.mu.Unlock()
