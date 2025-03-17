@@ -40,7 +40,7 @@ import (
 )
 
 type fsm struct {
-	mu          sync.Mutex // protects events and count
+	mu          sync.Mutex
 	applyEvents []string
 }
 
