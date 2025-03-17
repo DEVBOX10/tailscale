@@ -131,9 +131,7 @@ func newPeers(status *ipnstate.Status, tag string) *peers {
 	for _, p := range status.Peer {
 		if p.Tags != nil && views.SliceContains(*p.Tags, tag) {
 			ps.allowedPeers = append(ps.allowedPeers, p)
-			for _, addr := range p.TailscaleIPs {
-				ps.allowedRemoteAddrs.Add(addr)
-			}
+			ps.allowedRemoteAddrs.AddSlice(p.TailscaleIPs)
 		}
 	}
 	return ps
