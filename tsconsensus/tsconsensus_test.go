@@ -191,8 +191,7 @@ func waitForNodesToBeTaggedInStatus(t testing.TB, ctx context.Context, ts *tsnet
 				if tags == nil {
 					return false
 				}
-				sliceTags := tags.AsSlice()
-				if len(sliceTags) != 1 || sliceTags[0] != tag {
+				if tags.Len() != 1 || tags.At(0) != tag {
 					return false
 				}
 			}
