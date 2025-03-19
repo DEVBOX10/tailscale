@@ -339,7 +339,7 @@ var debugMux *http.ServeMux
 func run() (err error) {
 	var logf logger.Logf = log.Printf
 
-	sys := new(tsd.System)
+	sys := tsd.NewSystemWithEventBus()
 
 	// Parse config, if specified, to fail early if it's invalid.
 	var conf *conffile.Config
@@ -354,7 +354,7 @@ func run() (err error) {
 	var netMon *netmon.Monitor
 	isWinSvc := isWindowsService()
 	if !isWinSvc {
-		netMon, err = netmon.New(logf)
+		netMon, err = netmon.New(sys.Bus.Get(), logf)
 		if err != nil {
 			return fmt.Errorf("netmon.New: %w", err)
 		}
