@@ -339,9 +339,7 @@ var debugMux *http.ServeMux
 func run() (err error) {
 	var logf logger.Logf = log.Printf
 
-	// Install an event bus as early as possible, so that it's
-	// available universally when setting up everything else.
-	sys := tsd.NewSystemWithEventBus()
+	sys := new(tsd.System)
 
 	// Parse config, if specified, to fail early if it's invalid.
 	var conf *conffile.Config
@@ -678,7 +676,6 @@ var tstunNew = tstun.New
 
 func tryEngine(logf logger.Logf, sys *tsd.System, name string) (onlyNetstack bool, err error) {
 	conf := wgengine.Config{
-		EventBus:      sys.Bus.Get(),
 		ListenPort:    args.port,
 		NetMon:        sys.NetMon.Get(),
 		HealthTracker: sys.HealthTracker(),
